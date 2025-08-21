@@ -7,7 +7,7 @@
 // - handleSelectMovie / handleCloseModal: керування відкриттям модального вікна.
 import { useState, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import ReactPaginate from "react-paginate";
 import { fetchMovies } from "../../services/movieService";
 import type { Movie } from "../../types/movie";
@@ -27,13 +27,13 @@ const App = () => {
     // Запит буде автоматично виконуватись при зміні query або page.
     const {
         data,
-        isLoading,
         isError,
         isFetching, // Додатковий індикатор для повторних запитів
     } = useQuery({
         queryKey: ["movies", query, page], // Ключ кешування, залежить від query та page
         queryFn: () => fetchMovies(query, page),
         enabled: !!query, // Запит виконується тільки якщо query не пустий
+        placeholderData: keepPreviousData,
     });
 
     // Обробка помилок запиту та виведення сповіщення
@@ -69,10 +69,6 @@ const App = () => {
             <Toaster position="top-center" />
             <SearchBar onSearch={handleSearch} />
 
-            {/* Показуємо індикатор завантаження */}
-            {(isLoading || isFetching) && <Loader />}
-            {isError && <ErrorMessage />}
-
             {/* Рендеримо пагінацію, якщо сторінок більше однієї */}
             {totalPages > 1 && (
                 <ReactPaginate
@@ -87,6 +83,11 @@ const App = () => {
                     previousLabel="←"
                 />
             )}
+
+            {/* Індикатор завантаження відображається лише при першому запиті,
+            а isFetching - при кожному наступному. */}
+            {isFetching && <Loader />}
+            {isError && !isFetching && <ErrorMessage />}
 
             {/* Відображаємо сітку фільмів, якщо є дані */}
             {movies.length > 0 && (
