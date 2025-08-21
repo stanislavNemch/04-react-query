@@ -1,12 +1,14 @@
-// Компонент App — головний компонент додатку.
+// Компонент App - головний компонент програми.
 // Основне:
-// - Керує станом пошуку: масив фільмів, індикатор завантаження, стан помилки.
-// - Викликає сервіс fetchMovies для отримання результатів пошуку.
-// - Відображає SearchBar, Loader, ErrorMessage, MovieGrid та MovieModal.
-// - handleSearch: асинхронний запит, обробка помилок та повідомлень через toast.
-// - handleSelectMovie / handleCloseModal: управління відкриттям модального вікна.
-import { useState } from "react";
+// - Використовує TanStack Query для керування запитами (useQuery).
+// - Керує станом пошукового запиту (query) та поточної сторінки (page).
+// - Відображає SearchBar, Loader, ErrorMessage, MovieGrid, MovieModal та пагінацію.
+// - handleSearch: оновлює query, що автоматично викликає новий запит через useQuery.
+// - handleSelectMovie / handleCloseModal: керування відкриттям модального вікна.
+import { useState, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
+import { useQuery } from "@tanstack/react-query";
+import ReactPaginate from "react-paginate";
 import { fetchMovies } from "../../services/movieService";
 import type { Movie } from "../../types/movie";
 import SearchBar from "../SearchBar/SearchBar";
@@ -17,27 +19,38 @@ import MovieModal from "../MovieModal/MovieModal";
 import styles from "./App.module.css";
 
 const App = () => {
-    const [movies, setMovies] = useState<Movie[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [error, setError] = useState<boolean>(false);
+    const [query, setQuery] = useState<string>("");
+    const [page, setPage] = useState<number>(1);
     const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
-    const handleSearch = async (query: string): Promise<void> => {
-        try {
-            setMovies([]);
-            setIsLoading(true);
-            setError(false);
-            const data = await fetchMovies(query);
-            if (data.length === 0) {
-                toast.error("No movies found for your request.");
-            }
-            setMovies(data);
-        } catch {
-            setError(true);
+    // Використовуємо useQuery для отримання і кешування даних.
+    // Запит буде автоматично виконуватись при зміні query або page.
+    const {
+        data,
+        isLoading,
+        isError,
+        isFetching, // Додатковий індикатор для повторних запитів
+    } = useQuery({
+        queryKey: ["movies", query, page], // Ключ кешування, залежить від query та page
+        queryFn: () => fetchMovies(query, page),
+        enabled: !!query, // Запит виконується тільки якщо query не пустий
+    });
+
+    // Обробка помилок запиту та виведення сповіщення
+    useEffect(() => {
+        if (isError) {
             toast.error("There was an error, please try again...");
-        } finally {
-            setIsLoading(false);
         }
+        // Повідомлення, якщо за запитом нічого не знайдено
+        if (data && data.movies.length === 0) {
+            toast.error("No movies found for your request.");
+        }
+    }, [isError, data]);
+
+    const handleSearch = (newQuery: string): void => {
+        // Скидаємо сторінку на першу при новому пошуку
+        setQuery(newQuery);
+        setPage(1);
     };
 
     const handleSelectMovie = (movie: Movie): void => {
@@ -48,15 +61,38 @@ const App = () => {
         setSelectedMovie(null);
     };
 
+    const movies = data?.movies ?? [];
+    const totalPages = data?.totalPages ?? 0;
+
     return (
         <div className={styles.app}>
             <Toaster position="top-center" />
             <SearchBar onSearch={handleSearch} />
-            {isLoading && <Loader />}
-            {error && <ErrorMessage />}
+
+            {/* Показуємо індикатор завантаження */}
+            {(isLoading || isFetching) && <Loader />}
+            {isError && <ErrorMessage />}
+
+            {/* Рендеримо пагінацію, якщо сторінок більше однієї */}
+            {totalPages > 1 && (
+                <ReactPaginate
+                    pageCount={totalPages}
+                    pageRangeDisplayed={5}
+                    marginPagesDisplayed={1}
+                    onPageChange={({ selected }) => setPage(selected + 1)}
+                    forcePage={page - 1}
+                    containerClassName={styles.pagination}
+                    activeClassName={styles.active}
+                    nextLabel="→"
+                    previousLabel="←"
+                />
+            )}
+
+            {/* Відображаємо сітку фільмів, якщо є дані */}
             {movies.length > 0 && (
                 <MovieGrid movies={movies} onSelect={handleSelectMovie} />
             )}
+
             {selectedMovie && (
                 <MovieModal movie={selectedMovie} onClose={handleCloseModal} />
             )}

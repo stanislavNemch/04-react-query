@@ -7,3 +7,9 @@ export interface Movie {
     release_date: string;
     vote_average: number;
 }
+
+// Інтерфейс для відповіді від TMDB API, що включає пагінацію.
+export interface TmdbResponse {
+    results: Movie[];
+    total_pages: number;
+}
