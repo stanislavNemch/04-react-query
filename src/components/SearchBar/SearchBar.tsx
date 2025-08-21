@@ -7,10 +7,10 @@ import toast from "react-hot-toast";
 import styles from "./SearchBar.module.css";
 
 interface SearchBarProps {
-    onSearch: (query: string) => void;
+    onSubmit: (query: string) => void;
 }
 
-const SearchBar = ({ onSearch }: SearchBarProps) => {
+const SearchBar = ({ onSubmit }: SearchBarProps) => {
     // Ця функція буде викликана атрибутом `action`
     const handleFormAction = (formData: FormData) => {
         const query = formData.get("query") as string;
@@ -20,7 +20,7 @@ const SearchBar = ({ onSearch }: SearchBarProps) => {
             return;
         }
 
-        onSearch(query);
+        onSubmit(query);
     };
 
     return (

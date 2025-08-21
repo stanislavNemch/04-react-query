@@ -67,7 +67,7 @@ const App = () => {
     return (
         <div className={styles.app}>
             <Toaster position="top-center" />
-            <SearchBar onSearch={handleSearch} />
+            <SearchBar onSubmit={handleSearch} />
 
             {/* Рендеримо пагінацію, якщо сторінок більше однієї */}
             {totalPages > 1 && (

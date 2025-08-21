@@ -1,4 +1,4 @@
-import axios, { type AxiosResponse } from "axios";
+import axios from "axios";
 import type { Movie, TmdbResponse } from "../types/movie";
 
 // Створюємо екземпляр axios з базовими налаштуваннями
@@ -19,16 +19,10 @@ export const fetchMovies = async (
     query: string,
     page: number
 ): Promise<{ movies: Movie[]; totalPages: number }> => {
-    const response: AxiosResponse<TmdbResponse> = await apiClient.get(
-        "/search/movie",
-        {
-            params: {
-                query,
-                page,
-            },
-        }
-    );
-    // Повертаємо як список фільмів, так і загальну кількість сторінок.
+    const response = await apiClient.get<TmdbResponse>("/search/movie", {
+        params: { query, page },
+    });
+
     return {
         movies: response.data.results,
         totalPages: response.data.total_pages,
