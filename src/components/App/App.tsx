@@ -33,7 +33,7 @@ const App = () => {
         queryKey: ["movies", query, page], // Ключ кешування, залежить від query та page
         queryFn: () => fetchMovies(query, page),
         enabled: !!query, // Запит виконується тільки якщо query не пустий
-        placeholderData: keepPreviousData,
+        placeholderData: keepPreviousData, // Зберігаємо попередні дані при переході між сторінками
     });
 
     // Обробка помилок запиту та виведення сповіщення
