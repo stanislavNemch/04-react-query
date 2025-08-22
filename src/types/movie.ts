@@ -1,3 +1,5 @@
+// Інтерфейс окремого фільму, що приходить у масиві `results`.
+// ТУТ зберігаємо тільки "дані домену" (Movie), а не форми відповіді API.
 export interface Movie {
     id: number;
     poster_path: string;
@@ -6,10 +8,4 @@ export interface Movie {
     overview: string;
     release_date: string;
     vote_average: number;
-}
-
-// Інтерфейс для відповіді від TMDB API, що включає пагінацію.
-export interface TmdbResponse {
-    results: Movie[];
-    total_pages: number;
 }

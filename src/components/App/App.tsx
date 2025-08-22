@@ -41,11 +41,14 @@ const App = () => {
         if (isError) {
             toast.error("There was an error, please try again...");
         }
-        // Повідомлення, якщо за запитом нічого не знайдено
-        if (data && data.movies.length === 0) {
+        // Було: data.movies.length === 0
+        if (data && data.results.length === 0) {
             toast.error("No movies found for your request.");
         }
     }, [isError, data]);
+
+    const movies = data?.results ?? [];
+    const totalPages = data?.total_pages ?? 0;
 
     const handleSearch = (newQuery: string): void => {
         // Скидаємо сторінку на першу при новому пошуку
@@ -60,9 +63,6 @@ const App = () => {
     const handleCloseModal = (): void => {
         setSelectedMovie(null);
     };
-
-    const movies = data?.movies ?? [];
-    const totalPages = data?.totalPages ?? 0;
 
     return (
         <div className={styles.app}>
